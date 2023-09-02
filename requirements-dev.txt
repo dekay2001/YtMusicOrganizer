@@ -1,0 +1,10 @@
+-r requirements.txt
+assertpy
+pytest
+behave
+behave-restful
+bolt-ta
+conttest
+coverage
+pytest
+pytest-cov
