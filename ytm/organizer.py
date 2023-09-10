@@ -7,6 +7,7 @@ from dataclasses import dataclass
 
 
 def get_song_uploads(ytmusic):
+    logging.basicConfig( level=logging.INFO)
     return SongUploads(ytmusic)
 
 
@@ -23,9 +24,10 @@ class SongUploads:
         logging.info(f'Found {len(songs)} uploads')
         return songs
     
-    def write_songs_info(self, file_name, writer=None):
+    def write_songs_info(self, file_name, writer=None, lookup_year=False):
         writer = writer or _Writer()
         songs = self.get_songs()
+        if lookup_year: self._add_year_to(songs)
         serialized = [song.to_json() for song in songs]
         writer.write(file_name, {'songs': serialized})
         return songs
@@ -37,6 +39,10 @@ class SongUploads:
         album_info = upload.get('album', {})
         album = album_info.get('name') if album_info else ''
         return SongInfo(title, artist, album)
+    
+    def _add_year_to(self, songs):
+        for song in songs:
+            song.lookup_year(self._ytmusic)
 
 
 @dataclass
@@ -55,10 +61,8 @@ class SongInfo:
     def lookup_year(self, test_client=None):
         client = test_client or ytmusic
         results = client.search(f"{self.artist} {self.album}", 'albums', limit=1)
-        for result in results:
-            if result.get('resultType') == 'album':
-                self.year = result.get('year')
-            return result.get('year')
+        self._add_year(results)
+        if self.year: return self.year
         logging.warning(f'No results for {self.name} {self.artist} {self.album}')
         return None
         
@@ -69,6 +73,13 @@ class SongInfo:
             'album': self.album,
             'year': self.year
         }
+
+    def _add_year(self, results):
+        for result in results:
+            if result.get('resultType') == 'album':
+                self.year = result.get('year')
+                logging.info(f'Found year {self.year} for {self.name} {self.artist} {self.album}')
+                if self.year: return
 
     def __str__(self):
         return f"{self.name} by {self.artist} on {self.album} ({self.year})"

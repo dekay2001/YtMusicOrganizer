@@ -30,3 +30,11 @@ It will produce a file from your uploaded personal libary in the following forma
 
 Next I will be adding a year lookup that will be populated in the generated file, which I have done as a P.O.C. but I wouldn't say
 it is production ready.
+
+
+## Getting Started
+
+- Clone the repository and create a virtual environment to run.
+- Activate the virtual environment and run `pip install -r requirements-dev.txt`
+- Run the unit tests continuously with the command `bolt ct`.
+- Run a coverage report with `bolt cov`.

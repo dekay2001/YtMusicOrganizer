@@ -27,10 +27,27 @@ class TestSongUploads(unittest.TestCase):
         assert_that(self.writer.file.name).is_equal_to(file_name)
         self.writer.expect_json_dump(expected, self.writer.file, indent=4)
         
+    def test_write_songs_info_can_lookup_year(self):
+        file_name = 'path-to-songs.json'
+        songs = self.uploads.write_songs_info(file_name, writer=self.writer, lookup_year=True)
+        assert_that(songs[0].year).is_equal_to('1994')
+        self.expect_search('artist album', 'albums', 1)
+        
     def get_library_upload_songs(self, limit):
         # doubling youtubemusic
         self.specified_limit = limit
         return [{'title': 'name', 'artists': [{'name': 'artist'}], 'album': {'name': 'album'}}]
+
+    def search(self, query, filter_str, limit):
+        self.special_query = query
+        self.special_filter = filter_str
+        self.special_limit = limit
+        return [{'resultType': 'album', 'year': '1994'}]
+    
+    def expect_search(self, query, filter_str, limit):
+        assert_that(self.special_query).is_equal_to(query)
+        assert_that(self.special_filter).is_equal_to(filter_str)
+        assert_that(self.special_limit).is_equal_to(limit)
 
 
 class TestSongInfo(unittest.TestCase):

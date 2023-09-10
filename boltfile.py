@@ -13,6 +13,7 @@ bolt.register_task('clear-pyc', [
 
 bolt.register_task('ut', ['clear-pyc', 'set-vars.test', 'shell.pytest'])
 bolt.register_task('ct', ['clear-pyc', 'set-vars.test', 'conttest'])
+bolt.register_task('cov', ['clear-pyc', 'set-vars.test', 'shell.pytest.cov'])
 
 
 
@@ -20,6 +21,8 @@ bolt.register_task('ct', ['clear-pyc', 'set-vars.test', 'conttest'])
 PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 SRC_DIR = os.path.join(PROJECT_ROOT, 'SVC')
 TESTS_DIR = os.path.join(PROJECT_ROOT, 'tests')
+OUTPUT_UNIT_COVERAGE_DIR = os.path.join(PROJECT_ROOT, 'output', 'unit-coverage')
+
 
 
 config = { 
@@ -42,16 +45,16 @@ config = {
         "pytest": {
             "command": sys.executable,
             "arguments": ["-m", "pytest", TESTS_DIR],
-            # "cov": {
-            #     "arguments": [
-            #         "-m",
-            #         "pytest",
-            #         "--cov=SVC",
-            #         "--cov-report",
-            #         f"html:{OUTPUT_UNIT_COVERAGE_DIR}",
-            #         TESTS_DIR,
-            #     ]
-            # },
+            "cov": {
+                "arguments": [
+                    "-m",
+                    "pytest",
+                    # "--cov=ytm",
+                    "--cov-report",
+                    f"html:{OUTPUT_UNIT_COVERAGE_DIR}",
+                    TESTS_DIR,
+                ]
+            },
         },
     },
     'conttest': {
