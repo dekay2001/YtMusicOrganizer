@@ -1,5 +1,6 @@
 """
 """
+import collections as collections
 import logging as logging
 import json as json
 
@@ -16,13 +17,25 @@ class SongUploads:
     """
     def __init__(self, ytmusic):
         self._ytmusic = ytmusic
+        self._songs = None
         
     def get_songs(self):
         logging.info('Retrieving uploads...')
-        upload_data = self._ytmusic.get_library_upload_songs(limit=None)
-        songs = [self._create_song(upload) for upload in upload_data]
-        logging.info(f'Found {len(songs)} uploads')
-        return songs
+        self._songs = self._ytm_lookup_songs() if not self._songs else self._songs
+        return self._songs
+    
+    def songs_by_year(self):
+        songs = self.get_songs()
+        songs_by_year = collections.OrderedDict()
+        for song in songs:
+            year = song.year or 'unknown'
+            songs_by_year.setdefault(year, []).append(song)
+        return songs_by_year
+    
+    def read_songs_info(self, reader=None):
+        data = reader.read()
+        self._songs = [SongInfo(**song) for song in data.get('songs')]
+        return self._songs
     
     def write_songs_info(self, file_name, writer=None, lookup_year=False):
         writer = writer or _Writer()
@@ -30,6 +43,12 @@ class SongUploads:
         if lookup_year: self._add_year_to(songs)
         serialized = [song.to_json() for song in songs]
         writer.write(file_name, {'songs': serialized})
+        return songs
+    
+    def _ytm_lookup_songs(self):
+        upload_data = self._ytmusic.get_library_upload_songs(limit=None)
+        songs = [self._create_song(upload) for upload in upload_data]
+        logging.info(f'Found {len(songs)} uploads')
         return songs
     
     def _create_song(self, upload):
@@ -52,11 +71,11 @@ class SongInfo:
     album: str
     year: str
     
-    def __init__(self, name, artist, album):
+    def __init__(self, name, artist, album, year=None):
         self.name = name
         self.artist = artist
         self.album = album
-        self.year = None
+        self.year = year
         
     def lookup_year(self, test_client=None):
         client = test_client or ytmusic
@@ -83,6 +102,18 @@ class SongInfo:
 
     def __str__(self):
         return f"{self.name} by {self.artist} on {self.album} ({self.year})"
+    
+    
+class _Reader:
+    def read(self, file):
+        with self._open(file) as f:
+            return self._json_load(f)
+        
+    def _open(self, file):
+        return open(file)
+    
+    def _json_load(self, file):
+        return json.load(file)
     
     
 class _Writer:
